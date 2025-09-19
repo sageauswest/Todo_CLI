@@ -16,6 +16,6 @@ Manage tasks quickly from your terminal.
 ### From GitHub
 
 ```bash
-git clone https://github.com/yourusername/mini-todo.git
+git clone https://github.com/sageauswest/mini-todo.git
 cd mini-todo
 pip install .
