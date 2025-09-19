@@ -18,8 +18,10 @@ def save_tasks(tasks):
 
 def format_task(task, idx):
     status = "[✔]" if task["done"] else "[ ]"
-    deadline = task.get("deadline", "")
-    return f"{status} {idx}. {task['task']} (Deadline: {deadline})" if deadline else f"{status} {idx}. {task['task']}"
+    lines = [f"{status} {idx}. {task['task']}"]
+    if task.get("deadline"):
+        lines.append(f"     Deadline: {task['deadline']}")
+    return "\n".join(lines)
 
 def main(stdscr):
     curses.curs_set(1)
@@ -47,10 +49,14 @@ def main(stdscr):
 
         stdscr.addstr(len(instructions)+1, 0, "-"*50)
 
-        # Display tasks
+        # Display tasks (with multi-line support)
         if tasks:
+            line_num = len(instructions) + 2
             for i, task in enumerate(tasks, start=1):
-                stdscr.addstr(len(instructions)+2+i, 0, format_task(task, i))
+                for line in format_task(task, i).split("\n"):
+                    stdscr.addstr(line_num, 0, line)
+                    line_num += 1
+                line_num += 1  # spacing between tasks
         else:
             stdscr.addstr(len(instructions)+3, 0, "Your to-do list is empty.")
 
