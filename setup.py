@@ -3,10 +3,10 @@ from setuptools import setup
 setup(
     name="mini-todo",
     version="1.0.0",
-    py_modules=["mini-todo"],  # the name of your Python script without .py
+    py_modules=["mini_todo"],   # must match filename without .py
     entry_points={
         "console_scripts": [
-            "todo = mini-todo:main",  # 'todo' is the command users will run
+            "todo = mini_todo:main",  # must match module name
         ],
     },
     install_requires=[],
