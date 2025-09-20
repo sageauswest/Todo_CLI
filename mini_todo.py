@@ -4,6 +4,7 @@ import json
 import os
 import calendar
 import datetime
+import re
 
 DATA_FILE = os.path.expanduser("~/.todo_data.json")
 
@@ -39,7 +40,8 @@ def show_calendar(tasks):
         try:
             d = datetime.datetime.strptime(deadline, "%Y-%m-%d").date()
             if d.year == year and d.month == month:
-                cal_str = cal_str.replace(f"{d.day:2}", f"*{d.day:1}")
+                # safer replacement with regex
+                cal_str = re.sub(rf"\b{d.day:2}\b", f"*{d.day:2}", cal_str)
         except:
             pass
 
@@ -83,12 +85,14 @@ def main(stdscr):
                 line_num += 1
         else:
             stdscr.addstr(len(instructions)+3, 0, "Your to-do list is empty.")
+            line_num = len(instructions) + 3  # ensure line_num always exists
 
         # If calendar was requested, show it
         if calendar_view:
-            stdscr.addstr(line_num + 1, 0, "-"*50)
+            start_line = line_num + 1
+            stdscr.addstr(start_line, 0, "-"*50)
             for j, line in enumerate(calendar_view.split("\n")):
-                stdscr.addstr(line_num + 2 + j, 0, line)
+                stdscr.addstr(start_line + 1 + j, 0, line)
 
         # Status / input
         height, width = stdscr.getmaxyx()
