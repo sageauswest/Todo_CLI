@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import curses
-import datetime
 import json
 import os
+import calendar
+import datetime
 
 DATA_FILE = os.path.expanduser("~/.todo_data.json")
 
@@ -23,6 +24,27 @@ def format_task(task, idx):
         lines.append(f"     Deadline: {task['deadline']}")
     return "\n".join(lines)
 
+# NEW: Calendar function
+def show_calendar(tasks):
+    today = datetime.date.today()
+    year, month = today.year, today.month
+    cal = calendar.TextCalendar(calendar.MONDAY)
+    cal_str = cal.formatmonth(year, month)
+
+    # highlight deadlines
+    for t in tasks:
+        deadline = t.get("deadline", "")
+        if not deadline:
+            continue
+        try:
+            d = datetime.datetime.strptime(deadline, "%Y-%m-%d").date()
+            if d.year == year and d.month == month:
+                cal_str = cal_str.replace(f"{d.day:2}", f"*{d.day:1}")
+        except:
+            pass
+
+    return cal_str
+
 def main(stdscr):
     curses.curs_set(1)
     tasks = load_tasks()
@@ -35,11 +57,13 @@ def main(stdscr):
         "  edit [index] [new task]",
         "  delete [index]",
         "  deadline [index] [YYYY-MM-DD]",
+        "  calendar",
         "  exit"
     ]
 
     user_input = ""
     status_message = ""
+    calendar_view = ""  # store calendar string if requested
 
     while True:
         stdscr.clear()
@@ -49,16 +73,22 @@ def main(stdscr):
 
         stdscr.addstr(len(instructions)+1, 0, "-"*50)
 
-        # Display tasks (with multi-line support)
+        # Display tasks
         if tasks:
             line_num = len(instructions) + 2
             for i, task in enumerate(tasks, start=1):
                 for line in format_task(task, i).split("\n"):
                     stdscr.addstr(line_num, 0, line)
                     line_num += 1
-                line_num += 1  # spacing between tasks
+                line_num += 1
         else:
             stdscr.addstr(len(instructions)+3, 0, "Your to-do list is empty.")
+
+        # If calendar was requested, show it
+        if calendar_view:
+            stdscr.addstr(line_num + 1, 0, "-"*50)
+            for j, line in enumerate(calendar_view.split("\n")):
+                stdscr.addstr(line_num + 2 + j, 0, line)
 
         # Status / input
         height, width = stdscr.getmaxyx()
@@ -73,6 +103,8 @@ def main(stdscr):
         elif key == ord('\n'):
             command = user_input.strip()
             status_message = ""
+            calendar_view = ""  # reset calendar unless user calls it
+
             if command.lower().startswith("add "):
                 parts = command[4:].rsplit(" ", 1)
                 task_text = parts[0].strip()
@@ -86,6 +118,7 @@ def main(stdscr):
                 })
                 save_tasks(tasks)
                 status_message = "Task added."
+
             elif command.lower().startswith("done "):
                 try:
                     index = int(command[5:].strip()) - 1
@@ -94,6 +127,7 @@ def main(stdscr):
                     status_message = "Marked done."
                 except:
                     status_message = "Error: Invalid index."
+
             elif command.lower().startswith("undone "):
                 try:
                     index = int(command[7:].strip()) - 1
@@ -102,6 +136,7 @@ def main(stdscr):
                     status_message = "Marked undone."
                 except:
                     status_message = "Error: Invalid index."
+
             elif command.lower().startswith("edit "):
                 try:
                     parts = command[5:].strip().split(" ", 1)
@@ -112,6 +147,7 @@ def main(stdscr):
                     status_message = "Task updated."
                 except:
                     status_message = "Error: Usage edit [index] [new task]"
+
             elif command.lower().startswith("delete "):
                 try:
                     index = int(command[7:].strip()) - 1
@@ -120,6 +156,7 @@ def main(stdscr):
                     status_message = "Task deleted."
                 except:
                     status_message = "Error: Invalid index."
+
             elif command.lower().startswith("deadline "):
                 try:
                     parts = command[9:].strip().split(" ", 1)
@@ -129,8 +166,14 @@ def main(stdscr):
                     status_message = "Deadline updated."
                 except:
                     status_message = "Error: Usage deadline [index] [YYYY-MM-DD]"
+
+            elif command.lower() == "calendar":
+                calendar_view = show_calendar(tasks)
+                status_message = "Calendar displayed."
+
             elif command.lower() == "exit":
                 break
+
             else:
                 status_message = "Invalid command."
             user_input = ""
@@ -140,6 +183,6 @@ def main(stdscr):
             except:
                 pass
 
-# Launcher function for console_scripts
+# Launcher function
 def cli():
     curses.wrapper(main)
