@@ -1,4 +1,4 @@
-# Minimalistc Todo CLI
+# Minimalistc CLI Todo List
 
 A minimalist terminal-based to-do list CLI with persistent storage and optional deadlines. 
 Manage tasks quickly from your terminal.
