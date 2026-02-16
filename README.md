@@ -21,7 +21,7 @@ cd mini-todo
 pip install .
 ```
 
-### MacOS (Homebrew Python) note
+### macOS (Homebrew Python) note
 
 macOS users with Homebrew Python may get an "externally-managed-environment" error with pip.
 Use pipx instead:
