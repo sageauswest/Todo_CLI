@@ -110,9 +110,19 @@ def main(stdscr):
             calendar_view = ""  # reset calendar unless user calls it
 
             if command.lower().startswith("add "):
-                parts = command[4:].rsplit(" ", 1)
-                task_text = parts[0].strip()
-                deadline = parts[1] if len(parts) > 1 else ""
+                raw = command[4:].strip()
+                
+                parts = raw.rsplit(" ", 1)
+                
+                task_text = raw
+                deadline = ""
+
+                if len(parts) == 2:
+                    maybe_task, maybe_deadline = parts[0].strip(), parts[1].strip()
+                    if re.match(r"^\d{4}-\d{2}-\d{2}$", maybe_deadline):
+                        task_text = maybe_task
+                        deadline = maybe_deadline
+                
                 created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
                 tasks.append({
                     "task": task_text,
